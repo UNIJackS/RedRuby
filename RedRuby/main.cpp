@@ -128,47 +128,43 @@ bool notStolenCheck(boundInfo inital, boundInfo current) {
 
 boundInfo initalCheck() {
 	boundInfo initalImage;
-	bool invalidImage = true;
-	while (invalidImage) {
+	bool invalidRuby = true;
+	while (invalidRuby) {
 		take_picture();
 		update_screen();
 		initalImage = findBounds();
 
-		bool test = true;
 		if (initalImage.redPixelNum > minRedPixels) {
 			cout << "ruby present " << endl;
-			test = false;
+			invalidRuby = false;
 
 			if (initalImage.left - padding < 0) {
 				cout << "but too close to left edge" << endl;
-				test = true;
+				invalidRuby = true;
 			}
 			if (initalImage.right + padding > num_col) {
 				cout << "but too close to right edge" << endl;
-				test = true;
+				invalidRuby = true;
 			}
 			if (initalImage.top - padding < 0) {
 				cout << "but too close to top edge" << endl;
-				test = true;
+				invalidRuby = true;
 			}
 			if (initalImage.bottom + padding > num_rows) {
 				cout << "but too close to bottom edge" << endl;
-				test = true;
+				invalidRuby = true;
 			}
-		}
-		else {
+		}else {
 			cout << "ruby not present";
 		}
-		if (!test) {
-			break;
+		if (invalidRuby) {
+			int enter = 5;
+			cout << "Please move ruby away from edge or into view and then enter a number" << endl;
+			cin >> enter;		
 		}
-
-		int enter = 5;
-		cout << "Please move ruby away from edge or into view and then enter a number" << endl;
-		cin >> enter;
+		
 	}
 	return(initalImage);
-
 }
 
 void drawBounds(boundInfo input, int padding) {
