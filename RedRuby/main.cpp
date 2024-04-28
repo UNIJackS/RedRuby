@@ -11,13 +11,12 @@
 
 #include <iostream>
 #include "E101.h"
-
 using namespace std;
 
 
 //number of pixels bounds are alowed to fluctuate from inital
 const int padding = 25;
-const float redTolarance = 1.7;-
+const float redTolarance = 1.5;
 const int sizeTolarance = 500;
 const int minRedPixels = 2000;
 
@@ -134,43 +133,47 @@ bool notStolenCheck(boundInfo inital, boundInfo current) {
 }
 
 boundInfo initalCheck() {
+	boundInfo initalImage;
 	bool invalidImage = true;
 	while (invalidImage) {
 		take_picture();
-		boundInfo initalImage = findBounds();
+		update_screen();
+		initalImage = findBounds();
 
-		bool test = false;
+		bool test = true;
 		if (initalImage.redPixelNum > minRedPixels) {
-			cout << "ruby present";
-			test = true;
+			cout << "ruby present " << endl;
+			test = false;
 
 			if (initalImage.left - padding < 0) {
 				cout << "but too close to left edge" << endl;
-				test = false;
+				test = true;
 			}
 			if (initalImage.right + padding > num_col) {
 				cout << "but too close to right edge" << endl;
-				test = false;
+				test = true;
 			}
 			if (initalImage.top - padding < 0) {
 				cout << "but too close to top edge" << endl;
-				test = false;
+				test = true;
 			}
-			if (initalImage.bottom + padding > num_row) {
+			if (initalImage.bottom + padding > num_rows) {
 				cout << "but too close to bottom edge" << endl;
-				test = false;
+				test = true;
 			}
 		}
 		else {
-			cout << "ruby not present"
+			cout << "ruby not present";
+		}
+		if (!test) {
+			break;
 		}
 
-		invalidImage = test;
-
-		string test = "";
-		cout << "Please move ruby away from edge or into view and then press enter"
-			cin >> test;
+		int enter = 5;
+		cout << "Please move ruby away from edge or into view and then enter a number" << endl;
+		cin >> enter;
 	}
+	return(initalImage);
 
 }
 
