@@ -14,11 +14,12 @@
 
 using namespace std;
 
-//0.7... is the lowest i saw but 0.6 gives wiggle room
-const double threshhold_value = 0.5;
 
 //number of pixels bounds are alowed to fluctuate from inital
-const int tollarance = 10;
+const int padding = 25;
+const float redTolarance = 1.7;-
+const int sizeTolarance = 500;
+const int minRedPixels = 2000;
 
 const int num_rows = 240;
 const int num_col = 320;
@@ -31,35 +32,28 @@ struct boundInfo {
 	int left;
 	int right;
 	int redPixelNum;
-}
-
+};
 
 bool isRed(int y, int x) {
 	int red = (int)get_pixel(x, y, 0);
-	int intesity = (int)get_pixel(x, y, 3);;
+	int blue = (int)get_pixel(x, y, 1);
+	int green = (int)get_pixel(x, y, 2);
 
-	double redness = (double)red / (3.0 * (double)intesity);
 
-	if (redness > threshhold_value) {
+	if (red > redTolarance * blue && red > redTolarance * green) {
+		set_pixel(x, y, 0, 255, 0);
 		return(true);
 	}
-	else {
-		return(false);
-	}
-
-	cout << " error in isRed function" << endl;
-	return(false);
+	return false;
 }
 
-
-bool betterIsRed(int y, int x) {
-
-}
 
 boundInfo findBounds() {
 	boundInfo output;
 
 	output.redPixelNum = 0;
+	output.left = num_col;
+	output.right = 0;
 	bool firstRedRow = true;
 
 	//This loops through all the pixels in the image
@@ -93,7 +87,7 @@ boundInfo findBounds() {
 
 	//sets the values to be the outline of the screen 
 	//if there are no red pixesl found
-	if (output.redPixelNum = 0) {
+	if (0 == output.redPixelNum) {
 		output.left = 0;
 		output.right = num_col;
 		output.top = 0;
@@ -104,28 +98,28 @@ boundInfo findBounds() {
 }
 
 
-bool notStolenCheck(boundInfo intial, boundInfo current) {
-	if (current.top > inital.top + tollarance) {
+bool notStolenCheck(boundInfo inital, boundInfo current) {
+	if (current.top > inital.top + padding) {
 		cout << "top bound too far up" << endl;
 		return false;
 	}
-	else if (current.bottom < inital.bottom - tollarance) {
+	else if (current.bottom < inital.bottom - padding) {
 		cout << "bottom bound too far down" << endl;
 		return false;
 	}
-	else if (current.left < intial.left - tollarance) {
+	else if (current.left < inital.left - padding) {
 		cout << "Left bound too far left" << endl;
 		return false;
 	}
-	else if (current.right > inital.right + tollarance) {
+	else if (current.right > inital.right + padding) {
 		cout << "Right bound too far right" << endl;
 		return false;
 	}
-	else if (current.redPixelNum > inital.redPixelNum + 300) {
+	else if (current.redPixelNum > inital.redPixelNum + sizeTolarance) {
 		cout << "number of red pixels went above tollarance" << endl;
 		return false;
 	}
-	else if (current.redPixelNum < inital.redPixelNum - 300) {
+	else if (current.redPixelNum < inital.redPixelNum - sizeTolarance) {
 		cout << "number of red pixels went bellow tollarance" << endl;
 		return false;
 	}
@@ -139,52 +133,59 @@ bool notStolenCheck(boundInfo intial, boundInfo current) {
 
 }
 
-void drawBounds(boundInfo inital, boundInfo detected) {
+boundInfo initalCheck() {
+	bool invalidImage = true;
+	while (invalidImage) {
+		take_picture();
+		boundInfo initalImage = findBounds();
 
+		bool test = false;
+		if (initalImage.redPixelNum > minRedPixels) {
+			cout << "ruby present";
+			test = true;
 
-	//This code draws a green outline for the bounds of the detected red ruby
-	int detectedRows = detected.bottom - detected.top;
-	int detectedCols = detected.right - detected.left;
-	//This draws the left and right lines
-	for (int row = detected.top; row < detectedRows; row += 1) {
-		char green = 255;
-		char red = 0;
-		char blue = 0;
-		set_pixel(row, detected.left, red, green, blue);
-		set_pixel(row, detected.right, red, green, blue);
-	}
-	//This draws the top and bottom lines
-	for (int col = detected.left; col < detectedCols; col += 1) {
-		char green = 255;
-		char red = 0;
-		char blue = 0;
-		set_pixel(detected.top, col, red, green, blue);
-		set_pixel(detected.bottom, col, red, green, blue);
+			if (initalImage.left - padding < 0) {
+				cout << "but too close to left edge" << endl;
+				test = false;
+			}
+			if (initalImage.right + padding > num_col) {
+				cout << "but too close to right edge" << endl;
+				test = false;
+			}
+			if (initalImage.top - padding < 0) {
+				cout << "but too close to top edge" << endl;
+				test = false;
+			}
+			if (initalImage.bottom + padding > num_row) {
+				cout << "but too close to bottom edge" << endl;
+				test = false;
+			}
+		}
+		else {
+			cout << "ruby not present"
+		}
 
-	}
+		invalidImage = test;
 
-	//This code draws a red outline for the tollerance zone
-	int initalRows = inital.bottom - inital.top + 2 * tollarance;
-	int initalCols = inital.right - inital.left + 2 * tollarance;
-	//This draws the left and right lines
-	for (int row = inital.top - tollarance; row < initalRows; row += 1) {
-		char green = 255;
-		char red = 0;
-		char blue = 0;
-		set_pixel(row, detected.left - tollarance, red, green, blue);
-		set_pixel(row, detected.right + tollarance, red, green, blue);
-	}
-	//This draws the top and bottom lines
-	for (int col = inital.left - tollarance; col < detectedCols; col += 1) {
-		char green = 255;
-		char red = 0;
-		char blue = 0;
-		set_pixel(inital.top - tollarance, col, red, green, blue);
-		set_pixel(inital.bottom + tollarance, col, red, green, blue);
-
+		string test = "";
+		cout << "Please move ruby away from edge or into view and then press enter"
+			cin >> test;
 	}
 
+}
 
+void drawBounds(boundInfo input, int padding) {
+	//This draws the green left and right lines
+	for (int currentRow = 0; currentRow < (input.bottom - input.top) + 2 * padding; currentRow += 1) {
+		set_pixel(input.top + currentRow - padding, input.left - padding, 0, 255, 0);
+		set_pixel(input.top + currentRow - padding, input.right + padding, 0, 255, 0);
+	}
+	//This draws the blue top and bottom lines
+	for (int currentCol = 0; currentCol < (input.right - input.left) + 2 * padding; currentCol += 1) {
+		set_pixel(input.top - padding, input.left + currentCol - padding, 0, 0, 255);
+		set_pixel(input.bottom + padding, input.left + currentCol - padding, 0, 0, 255);
+
+	}
 
 
 }
@@ -195,31 +196,24 @@ int main() {
 	cout << "Error: " << err << endl;
 	open_screen_stream();
 
-	take_picture();
-	update_screen();
+	boundInfo initalImage = initalCheck();
 
-	boundInfo initalImage = findBounds();
-
-	notStolen = true;
-	runNum = 0;
-
+	bool notStolen = true;
 	while (notStolen) {
-		cout << "ruby checked";
-
 		take_picture();
-		update_screen();
-
 
 		boundInfo currentImage = findBounds();
+
+		//draws the bounding boxs to the screen
+		drawBounds(currentImage, 0);
+		drawBounds(initalImage, padding);
+		update_screen();
 
 
 		//checks against the intial iamge to seee if red ruby still there
 		notStolen = notStolenCheck(initalImage, currentImage);
 
-		//draws the bounding boxs to the screen
-		drawBounds(initalImage, currentImage)
-
-			sleep1(100); // slow down a bit to make display easier
+		sleep1(100); // slow down a bit to make display easier
 	}
 
 	cout << "RED RUBY STOLEN" << endl;
