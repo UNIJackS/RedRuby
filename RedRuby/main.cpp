@@ -38,8 +38,10 @@ bool isRed(int y, int x) {
 	int blue = (int)get_pixel(x, y, 1);
 	int green = (int)get_pixel(x, y, 2);
 
+	int intesity = green + blue;
 
-	if (red > redTolarance * blue && red > redTolarance * green) {
+
+	if (red > redTolarance * blue && red > redTolarance * green && intesity > 5) {
 		set_pixel(x, y, 0, 255, 0);
 		return(true);
 	}
@@ -98,11 +100,11 @@ boundInfo findBounds() {
 
 
 bool notStolenCheck(boundInfo inital, boundInfo current) {
-	if (current.top > inital.top + padding) {
+	if (current.top < inital.top - padding) {
 		cout << "top bound too far up" << endl;
 		return false;
 	}
-	else if (current.bottom < inital.bottom - padding) {
+	else if (current.bottom > inital.bottom + padding) {
 		cout << "bottom bound too far down" << endl;
 		return false;
 	}
@@ -112,14 +114,6 @@ bool notStolenCheck(boundInfo inital, boundInfo current) {
 	}
 	else if (current.right > inital.right + padding) {
 		cout << "Right bound too far right" << endl;
-		return false;
-	}
-	else if (current.redPixelNum > inital.redPixelNum + sizeTolarance) {
-		cout << "number of red pixels went above tollarance" << endl;
-		return false;
-	}
-	else if (current.redPixelNum < inital.redPixelNum - sizeTolarance) {
-		cout << "number of red pixels went bellow tollarance" << endl;
 		return false;
 	}
 	else if (current.redPixelNum == 0) {
@@ -216,7 +210,7 @@ int main() {
 		//checks against the intial iamge to seee if red ruby still there
 		notStolen = notStolenCheck(initalImage, currentImage);
 
-		sleep1(100); // slow down a bit to make display easier
+		sleep1(20); // slow down a bit to make display easier
 	}
 
 	cout << "RED RUBY STOLEN" << endl;
